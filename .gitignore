@@ -6,3 +6,9 @@ build/
 devel/
 logs/
 /.metadata/
+
+# PyCharm/CLion
+.idea/
+**/*.iml
+*.ipr
+*.iws
