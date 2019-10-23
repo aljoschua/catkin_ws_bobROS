@@ -6,7 +6,7 @@ from autominy_msgs.msg import NormalizedSteeringCommand, SpeedCommand
 def talker():
 
     rospy.init_node('talker', anonymous=True)
-    steering = rospy.Publisher('/actuators/steering normalized', NormalizedSteeringCommand, queue_size=10)
+    steering = rospy.Publisher('/actuators/steering_normalized', NormalizedSteeringCommand, queue_size=10)
     speed = rospy.Publisher('/actuators/speed', SpeedCommand, queue_size=10)
     rate = rospy.Rate(10)
 
@@ -14,7 +14,7 @@ def talker():
         steer_command = NormalizedSteeringCommand(value=1.)
         steering.publish(steer_command)
 
-        speed_command = SpeedCommand(value=200.)
+        speed_command = SpeedCommand(value=0.3)
         speed.publish(speed_command)
 
         rate.sleep()
