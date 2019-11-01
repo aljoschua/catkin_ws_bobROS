@@ -8,7 +8,7 @@ from nav_msgs.msg import Odometry
 from std_msgs.msg import String, Float32
 
 # --- definitions ---
-epsilon = 0.05   # allowed inaccuracy for distance calculation
+epsilon = 0.00005   # allowed inaccuracy for distance calculation
 speed_rpm = 0.3
 angle_left = 0.9
 angle_straight = 0.0
