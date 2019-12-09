@@ -20,20 +20,20 @@ recording = False
 initial_odometry = None
 
 
-def initialize(position):  # Will this be called again after unsubscribing ?
+def initialize(position):
     global recording
-    if not recording:
-        global x, y, theta, t
-        print "received initial position"
-        x = position.pose.pose.position.x
-        y = position.pose.pose.position.y
-        theta = 2 * np.arcsin(position.pose.pose.orientation.w)  # should also consider negative value
-        t = position.header.stamp.secs + 1e-9 * position.header.stamp.nsecs
-        recording = True
-        initial_odometry.unregister()
+    rospy.sleep(2)
+    global x, y, theta, t
+    print "received initial position"
+    x = position.pose.pose.position.x
+    y = position.pose.pose.position.y
+    theta = 2 * np.arcsin(position.pose.pose.orientation.w)  # should also consider negative value
+    t = position.header.stamp.secs + 1e-9 * position.header.stamp.nsecs
+    recording = True
+    initial_odometry.unregister()
 
 
-def storeAngle(angle):
+def store_angle(angle):
     global phi
     phi = angle.value
 
@@ -57,13 +57,33 @@ def calibrate(speed):
         theta += delta_t * theta_dot
 
         total_distance += np.sqrt(delta_x**2 + delta_y**2)
-        print total_distance
+
+
+def publish_odometry(base_msg):
+    base_msg.header.stamp = rospy.Time.now()
+    base_msg.pose.pose.position.x = x
+    base_msg.pose.pose.position.y = y
+
+    base_msg.pose.pose.orientation.w = np.cos(theta/2)
+    base_msg.pose.pose.orientation.z = np.sin(theta/2)
+
+    odometry.publish(base_msg)
 
 
 if __name__ == '__main__':
     rospy.init_node("calibration", anonymous=True)
-    rospy.Subscriber("/sensors/steering", SteeringAngle, storeAngle)  # Returns angle in radians
+    rospy.Subscriber("/sensors/steering", SteeringAngle, store_angle)  # Returns angle in radians
     rospy.Subscriber("/sensors/speed", Speed, calibrate)
-    initial_odometry = rospy.Subscriber("/communication/gps/16", Odometry, initialize)
+    initial_odometry = rospy.Subscriber("/sensors/localization/filtered_map", Odometry, initialize)
     odometry = rospy.Publisher("/odometry", Odometry, queue_size=10)
-    rospy.spin()
+
+
+    # Prep Odometry
+    base_msg = Odometry()
+    base_msg.header.frame_id = "map"
+    base_msg.child_frame_id = "base_link"
+
+    rate = rospy.Rate(100)
+    while not rospy.is_shutdown():
+        publish_odometry(base_msg)
+        rate.sleep()
